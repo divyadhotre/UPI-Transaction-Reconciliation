@@ -202,13 +202,12 @@ This project directly applies to:
 
 ## 👨‍💻 About Me
 
-**[Your Full Name]** — CSE 3rd Year | [Your College Name]
+**[Divya Dhotre]** — CSE Student  
 
-I built this project during a 20-day learning sprint to apply Python, Pandas, and Machine Learning to a real-world fintech problem that affects billions of Indians daily.
+I built this project  to apply Python, Pandas, and Machine Learning to a real-world fintech problem that affects billions of Indians daily.
 
-- 🔗 LinkedIn: [linkedin.com/in/yourprofile](#)
-- 💻 GitHub: [github.com/yourusername](#)
-- 📧 Email: youremail@gmail.com
+
+
 
 ---
 
