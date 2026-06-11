@@ -14,7 +14,7 @@
 
 ---
 
-![Dashboard Preview](assets/dashboard_preview .png)
+![Dashboard Preview](assets/dashboard_preview.png)
 
 
 </div>
