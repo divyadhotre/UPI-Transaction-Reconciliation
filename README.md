@@ -166,7 +166,7 @@ Open `http://localhost:8501` → click **Load Sample Indian Data** → explore.
 
 ## 🌐 Deployment
 
-Live on Streamlit Cloud → **[Click here to open the app](#)**
+Live on Streamlit Cloud → **[https://upi-transaction-reconciliation-egcpffyxf5gjdscs7yir5b.streamlit.app/](#)**
 
 To deploy your own instance:
 1. Push code to GitHub
