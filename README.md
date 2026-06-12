@@ -73,7 +73,7 @@ MISSING_IN_UPI    ██                     0 cases
 
 ## 🤖 AI Transaction Assistant — Ask Your Data Anything
 
-![AI Assistant Preview](assets/ai_assistant_preview.png)
+<img src="assets/ai_assistant_preview.png" width="500"/>
 
 The built-in **Gemini AI chatbot** lives in the sidebar and answers natural language questions directly from your live reconciliation data:
 
