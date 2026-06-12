@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import sys, os
-
+from src.chatbot import setup_gemini, build_data_context, get_ai_response
 sys.path.append(os.path.dirname(__file__))
 from src.reconcile import run_reconciliation, get_summary
 from src.fraud_detector import detect_anomalies
@@ -13,6 +13,14 @@ st.set_page_config(
     page_title="UPI Reconciliation Dashboard",
     page_icon="💰", layout="wide"
 )
+
+# Initialize Gemini modern client once
+if 'gemini_client' not in st.session_state:
+    st.session_state['gemini_client'] = setup_gemini()
+
+# Initialize chat log history
+if 'chat_history' not in st.session_state:
+    st.session_state['chat_history'] = []
 
 # ── CSS ───────────────────────────────────────────────────────────────────────
 st.markdown("""
@@ -135,6 +143,101 @@ with st.sidebar:
       <span style='color:#7c83ff;'>Or click Load Sample Data ↑</span>
     </div>
     """, unsafe_allow_html=True)
+
+    # ── ADDITION 3: AI Chatbot Side Panel ────────────────────────────────────
+
+    st.divider()
+    st.markdown("""
+    <div style='font-size:0.82rem;font-weight:500;
+                color:var(--color-text-primary);margin-bottom:6px;'>
+      🤖 AI Transaction Assistant
+    </div>
+    <div style='font-size:0.75rem;color:#8b92b3;margin-bottom:10px;line-height:1.5;'>
+      Ask anything about your transaction data
+    </div>
+    """, unsafe_allow_html=True)
+
+    # Suggested questions
+    suggestions = [
+        "Which bank has highest risk?",
+        "How many frauds detected?",
+        "What is the total amount gap?",
+        "Which merchant causes most issues?",
+    ]
+    st.markdown("<div style='font-size:0.72rem;color:#8b92b3;margin-bottom:4px;'>Quick questions:</div>",
+                unsafe_allow_html=True)
+    cols = st.columns(2)
+    for i, suggestion in enumerate(suggestions):
+        if cols[i % 2].button(suggestion, key=f"sugg_{i}",
+                               use_container_width=True):
+            st.session_state['pending_question'] = suggestion
+
+    # Chat input
+    user_input = st.chat_input("Ask about your transactions...")
+
+    # Handle question (from input or suggestion button)
+    question = user_input or st.session_state.pop('pending_question', None)
+
+    if question and 'bank_df' in st.session_state:
+        # FIXED: Look up 'gemini_client' to match your top initialization line
+        client_instance = st.session_state.get('gemini_client')
+        
+        if client_instance:
+            result_temp  = run_reconciliation(
+                st.session_state['bank_df'],
+                st.session_state['upi_df']
+            )
+            summary_temp = get_summary(result_temp)
+            flagged_temp = detect_anomalies(st.session_state['bank_df'])
+            context = build_data_context(result_temp, summary_temp, flagged_temp)
+
+            st.session_state['chat_history'].append({
+                "role": "user", "content": question
+            })
+            with st.spinner("Thinking..."):
+                answer = get_ai_response(
+                    client_instance, question, context,
+                    st.session_state['chat_history']
+                )
+            st.session_state['chat_history'].append({
+                "role": "assistant", "content": answer
+            })
+        else:
+            st.session_state['chat_history'].append({
+                "role": "user", "content": question
+            })
+            st.session_state['chat_history'].append({
+                "role": "assistant",
+                "content": "⚠️ Gemini API key not configured. Add it to .streamlit/secrets.toml"
+            })
+    elif question and 'bank_df' not in st.session_state:
+        st.warning("Load data first to use the AI assistant.")
+
+    # Display chat history
+    if st.session_state['chat_history']:
+        st.markdown("<div style='margin-top:10px;max-height:320px;overflow-y:auto;'>",
+                    unsafe_allow_html=True)
+        for msg in st.session_state['chat_history'][-6:]:
+            if msg['role'] == 'user':
+                st.markdown(f"""
+                <div style='background:#252840;border-radius:8px;
+                            padding:8px 12px;margin-bottom:6px;
+                            font-size:0.8rem;color:#e0e4ff;'>
+                  <b style='color:#7c83ff;'>You:</b> {msg['content']}
+                </div>""", unsafe_allow_html=True)
+            else:
+                st.markdown(f"""
+                <div style='background:#1a2e1a;border:0.5px solid #2d5a2d;
+                            border-radius:8px;padding:8px 12px;
+                            margin-bottom:6px;font-size:0.8rem;
+                            color:#e0e4ff;line-height:1.6;'>
+                  <b style='color:#00d4aa;'>AI:</b> {msg['content']}
+                </div>""", unsafe_allow_html=True)
+        st.markdown("</div>", unsafe_allow_html=True)
+
+        if st.button("🗑️ Clear chat", use_container_width=True):
+            st.session_state['chat_history'] = []
+            st.rerun()
 
 # ── Upload handler ────────────────────────────────────────────────────────────
 if bank_file and upi_file:
